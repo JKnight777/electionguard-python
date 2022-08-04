@@ -1,5 +1,5 @@
-import traceback
 from typing import Any
+from datetime import datetime
 import eel
 from electionguard_gui.components.component_base import ComponentBase
 from electionguard_gui.eel_utils import eel_fail, eel_success
@@ -25,7 +25,11 @@ class UploadBallotsComponent(ComponentBase):
         eel.expose(self.upload_ballot)
 
     def create_ballot_upload(
-        self, election_id: str, device_file_name: str, device_file_contents: str
+        self,
+        election_id: str,
+        device_file_name: str,
+        device_file_contents: str,
+        ballot_count: int,
     ) -> dict[str, Any]:
         try:
             db = self._db_service.get_db()
@@ -33,28 +37,42 @@ class UploadBallotsComponent(ComponentBase):
             election = self._election_service.get(db, election_id)
             if election is None:
                 return eel_fail(f"Election {election_id} not found")
+            created_at = datetime.utcnow()
             ballot_upload_id = self._ballot_upload_service.create(
-                db, election_id, device_file_name, device_file_contents
+                db,
+                election_id,
+                device_file_name,
+                device_file_contents,
+                ballot_count,
+                created_at,
+            )
+            self._election_service.append_ballot_upload(
+                db,
+                election_id,
+                ballot_upload_id,
+                device_file_contents,
+                ballot_count,
+                created_at,
             )
             return eel_success(ballot_upload_id)
         # pylint: disable=broad-except
         except Exception as e:
-            self._log.error(e)
-            traceback.print_exc()
-            return eel_fail(str(e))
+            return self.handle_error(e)
 
     def upload_ballot(
-        self, ballot_upload_id: str, file_name: str, file_contents: str
+        self,
+        ballot_upload_id: str,
+        election_id: str,
+        file_name: str,
+        file_contents: str,
     ) -> dict[str, Any]:
         try:
             db = self._db_service.get_db()
             self._log.debug(f"adding ballot {file_name} to {ballot_upload_id}")
             self._ballot_upload_service.add_ballot(
-                db, ballot_upload_id, file_name, file_contents
+                db, ballot_upload_id, election_id, file_name, file_contents
             )
             return eel_success()
         # pylint: disable=broad-except
         except Exception as e:
-            self._log.error(e)
-            traceback.print_exc()
-            return eel_fail(str(e))
+            return self.handle_error(e)

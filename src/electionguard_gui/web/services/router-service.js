@@ -9,15 +9,22 @@ import CreateElection from "../components/admin/create-election-component.js";
 import CreateKeyCeremony from "../components/admin/create-key-ceremony-component.js";
 import ViewKeyCeremonyAdmin from "../components/admin/view-key-ceremony-component.js";
 import ViewElectionAdmin from "../components/admin/view-election-component.js";
-import ExportEncryptionPackage from "../components/admin/export-encryption-package.js";
+import ExportEncryptionPackage from "../components/admin/export-encryption-package-component.js";
+import ExportElectionRecord from "../components/admin/export-election-record-component.js";
 import UploadBallots from "../components/admin/upload-ballots-component.js";
+import CreateDecryption from "../components/admin/create-decryption-component.js";
+import ViewDecryptionAdmin from "../components/admin/view-decryption-admin-component.js";
+import ViewTally from "../components/admin/view-tally-component.js";
+import ViewSpoiledBallot from "../components/admin/view-spoiled-ballot-component.js";
 
 // guardian components
 import GuardianHome from "../components/guardian/guardian-home-component.js";
 import ViewKeyCeremonyGuardian from "../components/guardian/view-key-ceremony-component.js";
+import ViewDecryptionGuardian from "../components/guardian/view-decryption-guardian-component.js";
 
 export default {
   getUrl(route, params) {
+    if (!route) throw new Error("Invalid route specified");
     return "#" + route.url + "?" + new URLSearchParams(params);
   },
   goTo(route, params) {
@@ -56,6 +63,11 @@ export default {
       secured: true,
       component: ExportEncryptionPackage,
     },
+    exportElectionRecord: {
+      url: "/admin/export-election-record",
+      secured: true,
+      component: ExportElectionRecord,
+    },
     createKeyCeremony: {
       url: "/admin/create-key-ceremony",
       secured: true,
@@ -71,6 +83,26 @@ export default {
       secured: true,
       component: UploadBallots,
     },
+    createDecryption: {
+      url: "/admin/create-decryption",
+      secured: true,
+      component: CreateDecryption,
+    },
+    viewDecryptionAdmin: {
+      url: "/admin/view-decryption",
+      secured: true,
+      component: ViewDecryptionAdmin,
+    },
+    viewTally: {
+      url: "/admin/view-tally",
+      secured: true,
+      component: ViewTally,
+    },
+    viewSpoiledBallot: {
+      url: "/admin/view-spoiled-ballot",
+      secured: true,
+      component: ViewSpoiledBallot,
+    },
 
     // guardian pages
     guardianHome: {
@@ -83,5 +115,15 @@ export default {
       secured: true,
       component: ViewKeyCeremonyGuardian,
     },
+    viewDecryptionGuardian: {
+      url: "/guardian/view-decryption",
+      secured: true,
+      component: ViewDecryptionGuardian,
+    },
+  },
+  getElectionUrl(electionId) {
+    return this.getUrl(this.routes.viewElectionAdmin, {
+      electionId: electionId,
+    });
   },
 };

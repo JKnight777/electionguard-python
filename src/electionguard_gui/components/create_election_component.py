@@ -16,6 +16,7 @@ from electionguard_gui.services import (
     KeyCeremonyService,
     GuiSetupInputRetrievalStep,
     ElectionService,
+    GuardianService,
 )
 
 
@@ -29,6 +30,7 @@ class CreateElectionComponent(ComponentBase):
     _setup_election_builder_step: SetupElectionBuilderStep
     _election_service: ElectionService
     _output_setup_files_step: OutputSetupFilesStep
+    _guardian_service: GuardianService
 
     def __init__(
         self,
@@ -37,12 +39,14 @@ class CreateElectionComponent(ComponentBase):
         setup_input_retrieval_step: GuiSetupInputRetrievalStep,
         setup_election_builder_step: SetupElectionBuilderStep,
         output_setup_files_step: OutputSetupFilesStep,
+        guardian_service: GuardianService,
     ) -> None:
         self._key_ceremony_service = key_ceremony_service
         self._setup_input_retrieval_step = setup_input_retrieval_step
         self._setup_election_builder_step = setup_election_builder_step
         self._election_service = election_service
         self._output_setup_files_step = output_setup_files_step
+        self._guardian_service = guardian_service
 
     def expose(self) -> None:
         eel.expose(self.get_keys)
@@ -74,8 +78,18 @@ class CreateElectionComponent(ComponentBase):
 
             key_ceremony = self._key_ceremony_service.get(db, key_ceremony_id)
 
+            guardians = [
+                self._guardian_service.load_guardian_from_key_ceremony(
+                    guardian_id, key_ceremony
+                )
+                for guardian_id in key_ceremony.guardians_joined
+            ]
             election_inputs = self._setup_input_retrieval_step.get_gui_inputs(
-                key_ceremony.guardian_count, key_ceremony.quorum, url, manifest_raw
+                key_ceremony.guardian_count,
+                key_ceremony.quorum,
+                guardians,
+                url,
+                manifest_raw,
             )
             joint_key = key_ceremony.get_joint_key()
             build_election_results = (
@@ -103,12 +117,12 @@ class CreateElectionComponent(ComponentBase):
                 constants,
                 guardian_records,
                 encryption_package_file,
+                url,
             )
             return eel_success(election_id)
         # pylint: disable=broad-except
         except Exception as e:
-            self._log.error(e)
-            return eel_fail(str(e))
+            return self.handle_error(e)
 
     def _zip(self, dir_to_zip: str, zip_file_to_make: str) -> str:
         make_archive(zip_file_to_make, self._COMPRESSION_FORMAT, dir_to_zip)

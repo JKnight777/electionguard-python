@@ -1,4 +1,4 @@
-import RouterService from "/services/router-service.js";
+import RouterService from "../../services/router-service.js";
 import Spinner from "../shared/spinner-component.js";
 
 export default {
@@ -31,15 +31,12 @@ export default {
       }
     },
     getElectionUrl: function () {
-      const page = RouterService.routes.viewElectionAdmin;
-      return RouterService.getUrl(page, {
-        electionId: this.electionId,
-      });
+      return RouterService.getElectionUrl(this.electionId);
     },
   },
   async mounted() {
     this.alert = undefined;
-    const result = await eel.get_export_locations()();
+    const result = await eel.get_encryption_package_export_locations()();
     if (result.success) {
       this.locations = result.result;
       this.location = this.locations[0];
@@ -57,14 +54,15 @@ export default {
         <div class="col-12">
           <h1>Encryption Package</h1>
         </div>
-        <div class="col-sm-12">
-          <label for="electionKey" class="form-label">Location</label>
+        <div class="col-12">
+          <label for="location" class="form-label">Location</label>
           <select id="location" class="form-select" v-model="location">
               <option v-for="location in locations" :value="location">{{ location }}</option>
           </select>
         </div>
         <div class="col-12 mt-4">
           <button type="submit" class="btn btn-primary">Export</button>
+          <a :href="getElectionUrl()" class="btn btn-secondary ms-3">Cancel</a>
           <spinner :visible="loading"></spinner>
         </div>
       </div>

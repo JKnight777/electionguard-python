@@ -1,3 +1,4 @@
+import traceback
 from typing import List
 import eel
 
@@ -6,20 +7,23 @@ from electionguard_gui.components import (
     ComponentBase,
     CreateElectionComponent,
     CreateKeyCeremonyComponent,
-    KeyCeremonyListComponent,
+    GuardianHomeComponent,
     KeyCeremonyDetailsComponent,
     ElectionListComponent,
-    ExportEncryptionPackage,
+    ExportEncryptionPackageComponent,
     UploadBallotsComponent,
+    CreateDecryptionComponent,
+    ViewDecryptionComponent,
+    ExportElectionRecordComponent,
+    ViewTallyComponent,
+    ViewSpoiledBallotComponent,
 )
 
 from electionguard_gui.services import (
     AuthorizationService,
     DbService,
     EelLogService,
-    KeyCeremonyStateService,
     ServiceBase,
-    BallotUploadService,
 )
 
 
@@ -35,17 +39,20 @@ class MainApp:
         self,
         log_service: EelLogService,
         db_service: DbService,
-        guardian_home_component: KeyCeremonyListComponent,
+        guardian_home_component: GuardianHomeComponent,
         create_key_ceremony_component: CreateKeyCeremonyComponent,
         key_ceremony_details_component: KeyCeremonyDetailsComponent,
         authorization_service: AuthorizationService,
-        key_ceremony_state_service: KeyCeremonyStateService,
         create_election_component: CreateElectionComponent,
         view_election_component: ViewElectionComponent,
         election_list_component: ElectionListComponent,
-        export_encryption_package: ExportEncryptionPackage,
+        export_encryption_package: ExportEncryptionPackageComponent,
         upload_ballots_component: UploadBallotsComponent,
-        ballot_upload_service: BallotUploadService,
+        create_decryption_component: CreateDecryptionComponent,
+        view_decryption_component: ViewDecryptionComponent,
+        export_election_record_component: ExportElectionRecordComponent,
+        view_tally_component: ViewTallyComponent,
+        view_spoiled_ballot_component: ViewSpoiledBallotComponent,
     ) -> None:
         super().__init__()
 
@@ -61,14 +68,18 @@ class MainApp:
             election_list_component,
             export_encryption_package,
             upload_ballots_component,
+            create_decryption_component,
+            view_decryption_component,
+            export_election_record_component,
+            view_tally_component,
+            view_spoiled_ballot_component,
         ]
 
+        # services that need to expose methods to the UI
         self.services = [
             authorization_service,
             db_service,
             log_service,
-            key_ceremony_state_service,
-            ballot_upload_service,
         ]
 
     def start(self) -> None:
@@ -87,4 +98,5 @@ class MainApp:
             eel.start("main.html", size=(1024, 768), port=0)
         except Exception as e:
             self.log_service.error(e)
+            traceback.print_exc()
             raise e
